@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rails-multitenant-signup-flow (0.1.0)
+    rails-multitenant-signup-flow (1.0.0)
       activerecord-tenanted (~> 0.6, >= 0.6.0)
 
 GEM

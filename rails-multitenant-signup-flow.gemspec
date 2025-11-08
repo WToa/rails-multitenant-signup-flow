@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.name          = "rails-multitenant-signup-flow"
   spec.version       = RailsMultitenantSignupFlow::VERSION
   spec.authors       = ["WToa"]
-  spec.email         = ["support@example.com"]
+  spec.email         = ["will@wtoa.dev"]
 
   spec.summary       = "Generators for configuring a Rails multi-tenant signup flow with activerecord-tenanted."
   spec.description   = "Installs controllers, services, and configuration to enable multi-tenant authentication using activerecord-tenanted."

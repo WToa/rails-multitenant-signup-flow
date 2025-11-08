@@ -6,16 +6,12 @@ on:
       - main
 
 jobs:
-  release:
+  test:
     runs-on: ubuntu-latest
-    env:
-      RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -25,6 +21,26 @@ jobs:
 
       - name: Run test suite
         run: bundle exec ruby -Itest test/*_test.rb
+
+  release:
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
 
       - name: Detect version change
         id: version
@@ -45,20 +61,6 @@ jobs:
           echo "changed=true" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Build gem
+      - name: Release gem
         if: steps.version.outputs.changed == 'true'
-        run: gem build rails-multitenant-signup-flow.gemspec
-
-      - name: Publish to RubyGems
-        if: steps.version.outputs.changed == 'true'
-        run: |
-          if [ -z "$RUBYGEMS_API_KEY" ]; then
-            echo "RUBYGEMS_API_KEY secret is not set."
-            exit 1
-          fi
-
-          mkdir -p "$HOME/.gem"
-            printf -- $'---\n:rubygems_api_key: %s\n' "$RUBYGEMS_API_KEY" > "$HOME/.gem/credentials"
-          chmod 0600 "$HOME/.gem/credentials"
-
-          gem push "rails-multitenant-signup-flow-${{ steps.version.outputs.version }}.gem"
+        uses: rubygems/release-gem@v1
