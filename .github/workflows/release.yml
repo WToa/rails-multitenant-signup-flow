@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Run test suite
+        run: bundle exec ruby -Itest test/*_test.rb
+
+      - name: Detect version change
+        id: version
+        run: |
+          BEFORE="${{ github.event.before }}"
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ] || [ -z "$BEFORE" ]; then
+            BEFORE="$(git rev-parse HEAD^)"
+          fi
+
+          if [ -n "$BEFORE" ]; then
+            if git diff --quiet "$BEFORE" HEAD -- lib/rails_multitenant_signup_flow/version.rb; then
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          VERSION="$(ruby -r ./lib/rails_multitenant_signup_flow/version.rb -e 'puts RailsMultitenantSignupFlow::VERSION')"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build gem
+        if: steps.version.outputs.changed == 'true'
+        run: gem build rails-multitenant-signup-flow.gemspec
+
+      - name: Publish to RubyGems
+        if: steps.version.outputs.changed == 'true'
+        run: |
+          if [ -z "$RUBYGEMS_API_KEY" ]; then
+            echo "RUBYGEMS_API_KEY secret is not set."
+            exit 1
+          fi
+
+          mkdir -p "$HOME/.gem"
+            printf -- $'---\n:rubygems_api_key: %s\n' "$RUBYGEMS_API_KEY" > "$HOME/.gem/credentials"
+          chmod 0600 "$HOME/.gem/credentials"
+
+          gem push "rails-multitenant-signup-flow-${{ steps.version.outputs.version }}.gem"

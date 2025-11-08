@@ -25,4 +25,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "activerecord-tenanted", "~> 0.6", ">= 0.6.0"
+  spec.add_development_dependency "minitest", "~> 5.20"
+  spec.add_development_dependency "railties", ">= 7.0"
+  spec.add_development_dependency "globalid", ">= 1.0"
 end

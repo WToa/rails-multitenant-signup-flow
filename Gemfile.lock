@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     rails-multitenant-signup-flow (0.1.0)
-      activerecord-tenanted
+      activerecord-tenanted (~> 0.6, >= 0.6.0)
 
 GEM
   remote: https://rubygems.org/
@@ -56,6 +56,8 @@ GEM
     drb (2.2.3)
     erb (5.1.3)
     erubi (1.13.1)
+    globalid (1.3.0)
+      activesupport (>= 6.1)
     i18n (1.14.7)
       concurrent-ruby (~> 1.0)
     io-console (0.8.1)
@@ -124,7 +126,10 @@ PLATFORMS
   x86_64-linux-gnu
 
 DEPENDENCIES
+  globalid (>= 1.0)
+  minitest (~> 5.20)
   rails-multitenant-signup-flow!
+  railties (>= 7.0)
 
 BUNDLED WITH
    2.7.2
