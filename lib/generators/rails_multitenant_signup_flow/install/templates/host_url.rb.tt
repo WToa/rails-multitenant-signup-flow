@@ -1,0 +1,20 @@
+module HostUrl
+  extend ActiveSupport::Concern
+
+  private
+    def host_url(tenant_name: nil, root: false)
+      host = if root
+        request.domain
+      elsif TenantService.tenant_subdomain?(request)
+        request.host
+      elsif Current.user
+        "#{Current.user&.tenant&.name}.#{request.host}"
+      elsif tenant_name.present?
+        "#{tenant_name}.#{request.host}"
+      else
+        request.host
+      end
+      host += ":#{request.port}" unless [80, 443].include?(request.port)
+      host
+    end
+end

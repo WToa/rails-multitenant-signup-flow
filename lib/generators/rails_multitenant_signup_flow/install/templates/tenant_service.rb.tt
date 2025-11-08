@@ -1,0 +1,21 @@
+class TenantService
+  def self.create!(tenant_name)
+    Tenant.transaction do
+      tenant = Tenant.create!(name: tenant_name)
+      ApplicationRecord.create_tenant(tenant_name)
+      tenant
+    end
+  end
+
+  def self.tenant_exists?(tenant_name)
+    Tenant.exists?(name: tenant_name)
+  end
+
+  def self.tenant_subdomain?(request)
+    request.subdomain.present? && request.subdomain != "www"
+  end
+
+  def self.current_tenant_name(request)
+    request.subdomain if tenant_subdomain?(request)
+  end
+end

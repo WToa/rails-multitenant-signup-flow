@@ -1,0 +1,14 @@
+class Tenant < GlobalRecord
+  has_many :users
+
+  validates :name, presence: true, uniqueness: { case_sensitive: false }, length: { in: 1..63 }
+  validates :name, format: { with: /\A[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\z/, message: "must be a valid subdomain (lowercase letters, numbers, and hyphens only, no leading/trailing hyphens)" }
+
+  before_validation :downcase_name
+
+  private
+
+  def downcase_name
+    self.name = name.downcase if name.present?
+  end
+end

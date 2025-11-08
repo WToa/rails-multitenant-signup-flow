@@ -1,0 +1,72 @@
+class SignUpsController < ApplicationController
+  include HostUrl
+  allow_unauthenticated_access
+  rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to sign_up_path, alert: "Try again later." }
+
+  before_action :redirect_if_on_subdomain, only: :show
+  before_action :validate_tenant_subdomain, only: :create
+  before_action :validate_tenant_availability, only: :create
+
+  def show
+    @user = User.new
+  end
+
+  def create
+    tenant_name = sign_up_params[:tenant_name]
+
+    @user = User.new(sign_up_params.except(:tenant_name))
+
+    User.transaction do
+      @user.tenant = if TenantService.tenant_subdomain?(request)
+        Tenant.find_by!(name: TenantService.current_tenant_name(request))
+      elsif tenant_name.present?
+        TenantService.create!(tenant_name)
+      end
+
+      if @user.save
+        start_new_session_for(@user)
+        redirect_to root_url(host: host_url(tenant_name: @user.tenant.name)), allow_other_host: true
+      else
+        render :show, status: :unprocessable_entity
+      end
+    end
+  end
+
+  private
+
+  def sign_up_params
+    params.expect(user: %i[email_address password password_confirmation tenant_name])
+  end
+
+  def validate_tenant_availability
+    return unless sign_up_params[:tenant_name].present?
+
+    tenant_name = sign_up_params[:tenant_name]
+
+    if TenantService.tenant_exists?(tenant_name) && !TenantService.tenant_subdomain?(request)
+      @user = User.new(sign_up_params.except(:tenant_name))
+      flash.now[:alert] = "That tenant already exists. Please choose another name."
+      render :show, status: :unprocessable_entity
+    end
+  end
+
+  def validate_tenant_subdomain
+    if TenantService.tenant_subdomain?(request)
+      tenant_name = TenantService.current_tenant_name(request)
+      unless TenantService.tenant_exists?(tenant_name)
+        raise ActionController::BadRequest, "Invalid tenant subdomain"
+      end
+
+      tenant_name_to_validate = sign_up_params[:tenant_name]
+      if tenant_name_to_validate.present? && tenant_name_to_validate != tenant_name
+        raise ActionController::BadRequest, "Tenant name does not match subdomain"
+      end
+    elsif sign_up_params[:tenant_name].blank?
+      raise ActionController::BadRequest, "Tenant name is required"
+    end
+  end
+
+  def redirect_if_on_subdomain
+    redirect_to sign_up_url(host: host_url(root: true)), allow_other_host: true if TenantService.tenant_subdomain?(request)
+  end
+end

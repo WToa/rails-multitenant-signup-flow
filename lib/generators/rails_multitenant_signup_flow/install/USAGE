@@ -1,0 +1,6 @@
+Description:
+    Installs authentication controllers and configuration for activerecord-tenanted multi-tenancy.
+
+Example:
+    bin/rails generate rails_multitenant_signup_flow:install
+
