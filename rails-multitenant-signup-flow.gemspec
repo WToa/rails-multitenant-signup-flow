@@ -10,12 +10,11 @@ Gem::Specification.new do |spec|
 
   spec.summary       = "Generators for configuring a Rails multi-tenant signup flow with activerecord-tenanted."
   spec.description   = "Installs controllers, services, and configuration to enable multi-tenant authentication using activerecord-tenanted."
-  spec.homepage      = "https://example.com/rails-multitenant-signup-flow"
+  spec.homepage      = "https://github.com/WToa/rails-multitenant-signup-flow"
   spec.license       = "MIT"
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://example.com/rails-multitenant-signup-flow"
-  spec.metadata["changelog_uri"] = "https://example.com/rails-multitenant-signup-flow/changelog"
+  spec.required_ruby_version = ">= 3.0.0"
 
   spec.files = Dir.chdir(__dir__) do
     `git ls-files -z`.split("\x0").select do |f|
@@ -25,5 +24,5 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "activerecord-tenanted"
+  spec.add_dependency "activerecord-tenanted", "~> 0.6", ">= 0.6.0"
 end
